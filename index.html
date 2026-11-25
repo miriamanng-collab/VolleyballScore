@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Volleyball Score</title>
+<meta name="description" content="Free volleyball score keeper with serve rotation, saved teams, match history, league standings and live sync across devices.">
+<link rel="canonical" href="https://YOUR-USERNAME.github.io/YOUR-REPO/">
+<meta property="og:type" content="website"><meta property="og:title" content="Volleyball Score">
+<meta property="og:description" content="Track volleyball scores, serve rotation, match history and standings. Syncs across devices with a league code.">
+<meta property="og:url" content="https://YOUR-USERNAME.github.io/YOUR-REPO/"><meta property="og:image" content="https://YOUR-USERNAME.github.io/YOUR-REPO/icon-512.png">
+<!-- Google Search Console: if you verify with the HTML tag method, paste the meta tag Google gives you on the next line -->
+<!-- <meta name="google-site-verification" content="PASTE_CODE_HERE"> -->
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+<script src="config.js"></script>
+<script>window.fbReady=new Promise(r=>{window._fbres=r})</script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getFirestore,doc,onSnapshot,runTransaction} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const c=window.FIREBASE_CONFIG;
+if(!c||!c.projectId||String(c.projectId).startsWith('YOUR')){window._fbres(null)}else{
+ const db=getFirestore(initializeApp(c));
+ window._fbres({
+  listen:(code,cb)=>onSnapshot(doc(db,'leagues',code),s=>{if(s.exists())cb(JSON.parse(s.data().json))},()=>{}),
+  merge:(code,L)=>runTransaction(db,async tx=>{const r=doc(db,'leagues',code),s=await tx.get(r);let m=L;
+   if(s.exists()){const d=JSON.parse(s.data().json),del=[...new Set([...(d.del||[]),...(L.del||[])])],seen=new Set();
+    const all=[...(L.matches||[]),...(d.matches||[])].filter(x=>!del.includes(x.id)&&!seen.has(x.id)&&seen.add(x.id));
+    const useL=(L.tu||0)>=(d.tu||0);m={matches:all,del,teams:useL?L.teams:d.teams,tu:Math.max(L.tu||0,d.tu||0)}}
+   tx.set(r,{json:JSON.stringify(m),updated:Date.now()})})
+ })}
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Volleyball Score"><meta name="theme-color" content="#c8641a">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f3ee;--card:#fff;--tx:#1d1d1b;--mut:#6b6a64;--ac:#c8641a;--a:#1f6feb;--b:#c2410c;--ln:#ddd9cf;--ok:#15803d;--wn:#b45309}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#141413;--card:#1f1f1d;--tx:#f1efe8;--mut:#9a988f;--ac:#f08a3c;--a:#6ea8ff;--b:#ff9a62;--ln:#35342f;--ok:#4ade80;--wn:#fbbf24}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:4px 0 12px}h1 span{color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;border:1px solid var(--ln);background:var(--card);color:var(--tx);border-radius:10px;padding:10px 14px;cursor:pointer}
+button.pri{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+button.ta{background:var(--a);color:#fff;border-color:var(--a)}button.tb{background:var(--b);color:#fff;border-color:var(--b)}
+button.big{flex:1;padding:18px;font-size:18px;font-weight:700}
+input,select{font:inherit;padding:7px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--tx);min-width:0;width:100%;margin-bottom:5px}
+.sb{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;text-align:center;align-items:center}
+.sc{font-size:64px;font-weight:800;line-height:1}.nm{font-weight:700}.mut{color:var(--mut);font-size:14px}
+.sv{display:inline-block;background:var(--ac);color:#fff;border-radius:99px;padding:1px 9px;font-size:12px;margin-left:4px}
+.srvbox{border:2px solid var(--ac);border-radius:10px;padding:8px;text-align:center;margin:8px 0;font-size:20px;font-weight:700}
+.srvbox.idle{border:1px dashed var(--ln);font-weight:400;font-size:15px;color:var(--mut)}
+.ord{display:flex;flex-direction:column;gap:4px}
+.pl{border:1px solid var(--ln);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;display:flex;justify-content:space-between}
+.pl.cur{background:color-mix(in srgb,var(--ac) 18%,var(--card));border-color:var(--ac);font-weight:700}
+.warn{background:color-mix(in srgb,var(--wn) 18%,var(--card));border:1px solid var(--wn);border-radius:8px;padding:8px;margin:6px 0;font-size:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.g2{grid-template-columns:1fr}.sc{font-size:52px}}
+ul{margin:4px 0;padding-left:18px;font-size:14px}.ok{color:var(--ok);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--ln)}th:nth-child(2),td:nth-child(2){text-align:left}
+.hd{cursor:grab;touch-action:none;padding:2px 8px;color:var(--mut);user-select:none;font-size:18px}.pl.ov{outline:2px dashed var(--ac)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.chip{border:1px solid var(--ln);border-radius:99px;padding:5px 12px;font-size:14px;cursor:pointer;background:var(--card)}.chip.sel{background:var(--ac);color:#fff;border-color:var(--ac)}
+</style></head><body><main>
+<h1>🏐 <span>Volleyball</span> Score</h1>
+<noscript><p style="padding:14px">Volleyball Score is a free volleyball score keeper with serve rotation tracking, saved teams and players, match history, league standings and live sync between devices. Please enable JavaScript to use it.</p></noscript>
+<div id="app"></div>
+</main>
+<script>
+const KEY='kvl-state-v2';let S=null,H=[],view='home',HIST=[],TEAMS=[],DEL=[],TU=0,sref=null,LC='';
+try{const x=JSON.parse(localStorage.getItem(KEY));if(x){S=x.S;H=x.H||[]}}catch(e){}
+try{HIST=JSON.parse(localStorage.getItem('vb-history-v1'))||[]}catch(e){}
+try{TEAMS=JSON.parse(localStorage.getItem('vb-teams-v1'))||[]}catch(e){}
+try{const m=JSON.parse(localStorage.getItem('vb-meta-v1'));if(m){DEL=m.DEL||[];TU=m.TU||0}}catch(e){}
+try{LC=localStorage.getItem('vb-league-v1')||''}catch(e){}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function save(){try{localStorage.setItem(KEY,JSON.stringify({S,H:H.slice(-150)}))}catch(e){}}
+let ref=null,syncMsg='Saved on this device only';
+function setSync(m){syncMsg=m;const e=$('sync');if(e)e.textContent=m}
+function saveHistOld(){try{localStorage.setItem('vb-history-v1',JSON.stringify(HIST))}catch(e){}
+ if(ref){setSync('☁ Syncing…');ref.set({matches:HIST,teams:TEAMS,updated:Date.now()}).then(()=>setSync('☁ Backed up to your account')).catch(()=>setSync('⚠ Backup failed — saved on this device'))}}
+async function initCloudOld(){try{
+ const u=await claude.use('user'),db=await claude.use('db');if(!u||!db){setSync('Saved on this device only (open while signed in to claude.ai to back up)');return}
+ const id=await u.id();if(!id){setSync('Saved on this device only');return}
+ ref=db.collection('data/users/'+id).doc('volleyball');
+ const snap=await ref.get();const rem=snap.exists?(snap.data().matches||[]):[];
+ const have=new Set(HIST.map(m=>m.id));rem.forEach(m=>{if(!have.has(m.id))HIST.push(m)});
+ const rt=snap.exists?(snap.data().teams||[]):[],th=new Set(TEAMS.map(t=>t.id));rt.forEach(t=>{if(!th.has(t.id))TEAMS.push(t)});try{localStorage.setItem('vb-teams-v1',JSON.stringify(TEAMS))}catch(e){}
+ HIST.sort((a,b)=>b.id-a.id);saveHist();if(view!='match')render()
+}catch(e){setSync('Saved on this device only')}}
+function record(){const p=pts();S.mid=Date.now();HIST.unshift({id:S.mid,date:new Date().toISOString(),teams:S.teams.map(t=>t.name),sets:[...S.sets],res:S.res.map(r=>[...r]),pts:p,wo:S.wo!=null});saveHist()}
+function goHome(){view='home';render()}
+function newMatch(force){if(!force&&S&&S.phase!='done'&&!confirm('Discard the match in progress?'))return;S=null;H=[];SU=null;view='setup';save();render()}
+function delMatch(id){if(!confirm('Delete this match from history?'))return;rmMatch(id);saveHist();render()}
+function mp(m){if(m.wo)return m.pts;const w=m.sets[0]>m.sets[1]?0:1,p=[0,0];p[w]=m.sets[1-w]==0?3:2;return p}
+function table(){const T={},sum=(m,i)=>m.res.reduce((a,r)=>a+r[i],0);
+ HIST.forEach(m=>[0,1].forEach(i=>{const k=m.teams[i].trim().toLowerCase();const r=T[k]||(T[k]={n:m.teams[i],P:0,W:0,L:0,sw:0,sl:0,pf:0,pa:0,pts:0});r.P++;r.pts+=mp(m)[i];mp(m)[i]>mp(m)[1-i]?r.W++:r.L++;r.sw+=m.sets[i];r.sl+=m.sets[1-i];r.pf+=sum(m,i);r.pa+=sum(m,1-i)}));
+ const sr=r=>r.sw/(r.sl||.0001),pr=r=>r.pf/(r.pa||.0001);
+ return Object.values(T).sort((a,b)=>b.pts-a.pts||sr(b)-sr(a)||pr(b)-pr(a))}
+function home(){
+ const live=S&&S.phase!='done',tb=table();
+ let h=`<div class="row" style="margin-bottom:12px"><button class="pri" onclick="newMatch()">+ New match</button><button onclick="view='teams';render()">👥 Teams & players</button>${live?`<button onclick="view='match';render()">▶ Resume: ${esc(S.teams[0].name)} ${S.sc[0]}–${S.sc[1]} ${esc(S.teams[1].name)} (Set ${S.set})</button><button onclick="reset()">🗑 Delete match</button>`:''}</div>`;
+ h+=`<div class="mut" id="sync" style="margin-bottom:10px">${esc(syncMsg)}</div><div class="card"><b>Standings</b><div class="mut">Calculated automatically from saved matches. Ranked by league points, then set ratio, then point ratio.</div>`+(tb.length?`<div style="overflow-x:auto"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Sets</th><th>Pts</th></tr>${tb.map((r,i)=>`<tr><td>${i+1}</td><td><b>${esc(r.n)}</b></td><td>${r.P}</td><td>${r.W}</td><td>${r.L}</td><td>${r.sw}–${r.sl}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table></div>`:'<p class="mut">No finished matches yet.</p>')+`</div>`;
+ h+=`<div class="card"><b>Match history</b>`+(HIST.length?HIST.map(m=>`<div style="border-top:1px solid var(--ln);padding:8px 0;margin-top:8px"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span><b>${esc(m.teams[0])}</b> ${m.sets[0]}–${m.sets[1]} <b>${esc(m.teams[1])}</b>${m.wo?' (walkover)':''}</span><button style="padding:2px 9px" onclick="delMatch(${m.id})">✕</button></div><div class="mut">${new Date(m.date).toLocaleString([],{dateStyle:'medium',timeStyle:'short'})}${m.res.length?' · '+m.res.map((r,i)=>`S${i+1} ${r[0]}–${r[1]}`).join(', '):''} · League pts ${mp(m)[0]}–${mp(m)[1]}</div></div>`).join(''):'<p class="mut">Finished matches are saved here automatically.</p>')+`</div>`;
+ h+=`<div class="card"><b>Sync code</b><div class="mut">All devices with the same code share one league, live. Your code:</div><div style="font-size:26px;font-weight:800;letter-spacing:2px;margin:6px 0">${esc(LC?LC.toUpperCase():'NOT SET')}</div><div class="mut">Enter this code on any device to join this league. No accounts or emails needed.</div><div class="row" style="margin:8px 0"><button onclick="newLeague()">Start a new league</button></div><textarea id="bk" readonly style="display:none;width:100%;height:80px;margin-bottom:8px"></textarea><div class="mut">Join a league with a sync code:</div><textarea id="imp" placeholder="Enter sync code" style="width:100%;height:60px;margin:6px 0"></textarea><button onclick="joinLeague()">Join league</button></div>`;
+ $('app').innerHTML=h}
+function showBackupOld(){const e=$('bk');e.value=JSON.stringify(HIST);e.style.display='block';e.focus();e.select()}
+function importBackupOld(){try{const a=JSON.parse($('imp').value);if(!Array.isArray(a))throw 0;const have=new Set(HIST.map(m=>m.id));let n=0;a.forEach(m=>{if(m&&m.id&&m.teams&&m.pts&&!have.has(m.id)){HIST.push(m);n++}});HIST.sort((x,y)=>y.id-x.id);saveHist();alert(n+' match(es) imported');render()}catch(e){alert('That backup code isn’t valid.')}}
+function setupOld(){
+ const t=i=>`<div class="card"><div class="mut">Team name</div><input id="tn${i}" value="${i?'Team B':'Team A'}" placeholder="Team name" oninput="updToss()" style="font-weight:700"><div class="mut" style="margin-bottom:6px">Players in serving order</div>`+
+ [...Array(8)].map((_,k)=>`<input id="p${i}_${k}" placeholder="${k<6?'Player '+(k+1):'Optional'}" value="${k<6?(i?'B':'A')+(k+1):''}">`).join('')+`</div>`;
+ $('app').innerHTML=`<p class="mut">List each team’s players in the order they serve. The app tracks who is serving and moves to the next player each time a team wins the serve back.</p>
+ <div class="g2">${t(0)}${t(1)}</div>
+ <div class="card"><b>Coin toss — who serves first in Set 1?</b><div class="row" style="margin-top:8px"><select id="fs" style="width:auto"><option value="0">Team A</option><option value="1">Team B</option></select><button class="pri" onclick="start()">Start match</button><button onclick="goHome()">← Home</button></div></div>`;
+}
+function updTossOld(){[0,1].forEach(i=>{$('fs').options[i].text=$('tn'+i).value||'Team '+'AB'[i]})}
+function startOld(){
+ const teams=[0,1].map(i=>({name:$('tn'+i).value||'Team '+'AB'[i],pl:[...Array(8)].map((_,k)=>$(`p${i}_${k}`).value.trim()).filter(Boolean),i:0}));
+ if(teams.some(t=>!t.pl.length)){alert('Add at least one player per team.');return}
+ const f=+$('fs').value;
+ S={teams,set:1,sc:[0,0],sets:[0,0],srv:f,first:[f],res:[],phase:'play',log:[],sw:false,wo:null};H=[];
+ S.log.push(`Set 1 begins — ${teams[f].name} serve first (${teams[f].pl[0]})`);view='match';save();render();
+}
+let SU=null,FS=0;
+function saveTeams(){TU=Date.now();try{localStorage.setItem('vb-teams-v1',JSON.stringify(TEAMS))}catch(e){}saveHist()}
+function initSU(){SU=[0,1].map(i=>({tid:'',name:i?'Team B':'Team A',order:[],roster:[]}));FS=0}
+function pickTeam(i,id){const t=TEAMS.find(x=>x.id==id),s=SU[i];s.tid=id;s.order=[];if(t){s.name=t.name;s.roster=[...t.players]}else s.roster=[];setup()}
+function togglePl(i,x){const s=SU[i],n=s.roster[x],k=s.order.indexOf(n);k<0?s.order.push(n):s.order.splice(k,1);setup()}
+function delOrd(i,k){SU[i].order.splice(k,1);setup()}
+function selAll(i){SU[i].order=[...SU[i].roster];setup()}
+function addSetupPlayer(i){const v=$('np'+i).value.trim();if(!v)return;const s=SU[i];if(!s.order.includes(v))s.order.push(v);const t=s.tid&&TEAMS.find(x=>x.id==s.tid);if(t&&!t.players.includes(v)){t.players.push(v);s.roster.push(v);saveTeams()}setup();$('np'+i).focus()}
+function updToss(){const e=$('fs');if(e)[0,1].forEach(i=>{e.options[i].text=SU[i].name||'Team '+'AB'[i]})}
+function setup(){if(!SU)initSU();
+ const side=i=>{const s=SU[i],extra=s.order.map((n,k)=>[n,k]).filter(a=>!s.roster.includes(a[0]));
+ return `<div class="card"><div class="mut">Saved team</div><select onchange="pickTeam(${i},this.value)"><option value="">— Custom team —</option>${TEAMS.map(t=>`<option value="${t.id}" ${t.id==s.tid?'selected':''}>${esc(t.name)}</option>`).join('')}</select>
+ <div class="mut">Team name</div><input value="${esc(s.name)}" oninput="SU[${i}].name=this.value;updToss()" style="font-weight:700">
+ <div class="mut">Tap players in the order they serve (${s.order.length} chosen)</div>
+ <div class="chips">${s.roster.map((n,x)=>{const k=s.order.indexOf(n);return `<span class="chip ${k>=0?'sel':''}" onclick="togglePl(${i},${x})">${k>=0?(k+1)+'. ':''}${esc(n)}</span>`}).join('')}${extra.map(a=>`<span class="chip sel" onclick="delOrd(${i},${a[1]})">${a[1]+1}. ${esc(a[0])} ✕</span>`).join('')}${!s.roster.length&&!extra.length?'<span class="mut">Pick a saved team above or add players below.</span>':''}</div>
+ ${s.roster.length?`<button style="padding:4px 10px;margin-bottom:8px" onclick="selAll(${i})">Select all in roster order</button>`:''}
+ <div class="row" style="flex-wrap:nowrap"><input id="np${i}" enterkeyhint="next" onkeydown="if(event.key==='Enter'){event.preventDefault();addSetupPlayer(${i})}" placeholder="${s.tid?'Add new player (saved to team)':'Add player'}" style="margin:0"><button onclick="addSetupPlayer(${i})">Add</button></div></div>`};
+ $('app').innerHTML=`<p class="mut">Choose a saved team to see all its players, then tap the ones playing in serving order. Manage rosters under “Teams & players” on the home page.</p><div class="g2">${side(0)}${side(1)}</div>
+ <div class="card"><b>Coin toss — who serves first in Set 1?</b><div class="row" style="margin-top:8px"><select id="fs" style="width:auto" onchange="FS=+this.value">${[0,1].map(i=>`<option value="${i}" ${FS==i?'selected':''}>${esc(SU[i].name||'Team '+'AB'[i])}</option>`).join('')}</select><button class="pri" onclick="start()">Start match</button><button onclick="goHome()">← Home</button></div></div>`}
+function start(){if(SU.some(s=>!s.order.length)){alert('Choose at least one player for each team.');return}
+ const teams=SU.map((s,i)=>({name:s.name.trim()||'Team '+'AB'[i],pl:[...s.order],i:0,bench:s.roster.filter(n=>!s.order.includes(n))})),f=FS;
+ S={teams,set:1,sc:[0,0],sets:[0,0],srv:f,first:[f],res:[],phase:'play',log:[],sw:false,wo:null};H=[];SU=null;
+ S.log.push(`Set 1 begins — ${teams[f].name} serve first (${teams[f].pl[0]})`);view='match';save();render()}
+function addTeam(){TEAMS.push({id:Date.now(),name:'New team',players:[]});saveTeams();render()}
+function addTP(x){const v=$('tp'+x).value.trim(),t=TEAMS[x];if(!v||t.players.includes(v))return;t.players.push(v);saveTeams();render();$('tp'+x).focus()}
+function delPlayer(x,k){const t=TEAMS[x];if(!confirm('Remove '+t.players[k]+' from '+t.name+'?'))return;t.players.splice(k,1);saveTeams();render()}
+function delTeam(x){if(!confirm('Delete '+TEAMS[x].name+' and its roster? Past matches are kept.'))return;TEAMS.splice(x,1);saveTeams();render()}
+function teamsView(){$('app').innerHTML=`<div class="row" style="margin-bottom:12px"><button onclick="goHome()">← Home</button><button class="pri" onclick="addTeam()">+ Add team</button></div>`+(TEAMS.length?TEAMS.map((t,x)=>`<div class="card"><input value="${esc(t.name)}" onchange="TEAMS[${x}].name=this.value.trim()||'Team';saveTeams()" style="font-weight:700"><div class="mut">Tap a player to remove</div><div class="chips">${t.players.map((p,k)=>`<span class="chip" onclick="delPlayer(${x},${k})">${esc(p)} ✕</span>`).join('')||'<span class="mut">No players yet</span>'}</div><div class="row" style="flex-wrap:nowrap"><input id="tp${x}" enterkeyhint="next" onkeydown="if(event.key==='Enter'){event.preventDefault();addTP(${x})}" placeholder="Add player" style="margin:0"><button onclick="addTP(${x})">Add</button></div><div class="row" style="margin-top:8px"><button onclick="delTeam(${x})">Delete team</button></div></div>`).join(''):'<p class="mut">No teams yet. Add a team, then add its players.</p>')}
+function rmMatch(id){HIST=HIST.filter(m=>m.id!=id);if(!DEL.includes(id))DEL.push(id)}
+function persist(){try{localStorage.setItem('vb-history-v1',JSON.stringify(HIST));localStorage.setItem('vb-teams-v1',JSON.stringify(TEAMS));localStorage.setItem('vb-meta-v1',JSON.stringify({DEL,TU}))}catch(e){}}
+function saveHist(){persist();const p={matches:HIST,teams:TEAMS,del:DEL,tu:TU,updated:Date.now()};
+ const a=sref?sref.set(p).then(()=>1,()=>0):Promise.resolve(0),b=ref?ref.set(p).then(()=>1,()=>0):Promise.resolve(0);
+ if(sref||ref){setSync('☁ Syncing…');Promise.all([a,b]).then(([x,y])=>setSync(x?'☁ Live sync on — shared with everyone who has edit access':y?'☁ Backed up to your account only (no edit access to shared data)':'⚠ Backup failed — saved on this device'))}}
+function mergeRemote(d){if(!d)return false;let ch=false;
+ (d.del||[]).forEach(i=>{if(!DEL.includes(i)){DEL.push(i);ch=true}});
+ const have=new Set(HIST.map(m=>m.id));(d.matches||[]).forEach(m=>{if(!have.has(m.id)&&!DEL.includes(m.id)){HIST.push(m);ch=true}});
+ const n=HIST.length;HIST=HIST.filter(m=>!DEL.includes(m.id));if(HIST.length!=n)ch=true;
+ if((d.tu||0)>TU){TEAMS=d.teams||[];TU=d.tu;ch=true}else if(!TEAMS.length&&(d.teams||[]).length){TEAMS=d.teams;ch=true}
+ HIST.sort((a,b)=>b.id-a.id);
+ if(ch){persist();if(view!='match'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))render()}return ch}
+async function initCloud(){try{
+ const u=await claude.use('user'),db=await claude.use('db');
+ if(!u||!db){setSync('Saved on this device only (open while signed in to claude.ai to sync)');return}
+ const id=await u.id();
+ if(id){ref=db.collection('data/users/'+id).doc('volleyball');try{const s=await ref.get();if(s.exists)mergeRemote(s.data())}catch(e){}}
+ DB=db;await connect();
+}catch(e){setSync('Saved on this device only')}}
+async function mkCode(){const o={m:HIST.map(m=>[m.id,m.teams,m.sets,m.res.flat(),m.wo?(m.pts[0]>m.pts[1]?1:2):0]),t:TEAMS.map(t=>[t.id,t.name,t.players]),d:DEL};
+ let b=new TextEncoder().encode(JSON.stringify(o)),z=!!window.CompressionStream;
+ if(z)b=new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+ let x='';b.forEach(c=>x+=String.fromCharCode(c));return (z?'z':'p')+btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+async function readCode(c){let b=Uint8Array.from(atob(c.slice(1).replace(/-/g,'+').replace(/_/g,'/')),x=>x.charCodeAt(0));
+ if(c[0]=='z')b=new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+ const o=JSON.parse(new TextDecoder().decode(b));
+ return {matches:o.m.map(a=>{const r=[];for(let i=0;i<a[3].length;i+=2)r.push([a[3][i],a[3][i+1]]);return {id:a[0],date:new Date(a[0]).toISOString(),teams:a[1],sets:a[2],res:r,wo:!!a[4],pts:a[4]==1?[3,0]:a[4]==2?[0,3]:[0,0]}}),teams:o.t.map(a=>({id:a[0],name:a[1],players:a[2]})),del:o.d||[]}}
+async function showBackup(){const e=$('bk');e.style.display='block';e.value='Making code…';try{e.value=await mkCode()}catch(x){e.value='Could not make a code.'}e.focus();e.select()}
+async function importBackup(){try{const d=await readCode($('imp').value.trim()),th=new Set(TEAMS.map(t=>t.id));d.teams.forEach(t=>{if(!th.has(t.id))TEAMS.push(t)});const n0=HIST.length;mergeRemote({matches:d.matches,del:d.del});TU=Date.now();saveHist();alert((HIST.length-n0)+' match(es) imported');render()}catch(e){alert('That backup code isn’t valid.')}}
+let DB=null,unsub=null;
+async function connect(){if(unsub){try{unsub()}catch(e){}unsub=null}sref=DB.collection('shared').doc(LC);
+ try{const s=await sref.get();if(s.exists)mergeRemote(s.data())}catch(e){}
+ saveHist();unsub=sref.onSnapshot(s=>{if(s.exists)mergeRemote(s.data())},()=>{})}
+async function setLeague(c){LC=c;try{localStorage.setItem('vb-league-v1',c)}catch(e){}if(DB)await connect();render()}
+async function joinLeague(){let c=$('imp').value.toUpperCase().replace(/[^A-Z0-9-]/g,'');if(c=='VOLLEYBALL')c='volleyball';if(c.length<4){alert('Enter a valid sync code.');return}if(c==LC){alert('This device is already on that league.');return}if(!confirm('Join league '+c+'? This device’s matches and teams will be merged into it.'))return;await setLeague(c)}
+async function newLeague(){if(!confirm('Start a new league with a new sync code? This device’s current matches and teams carry over.'))return;const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let c='VB-';for(let i=0;i<8;i++)c+=a[Math.floor(Math.random()*a.length)];await setLeague(c)}
+function snap(){H.push(JSON.stringify(S))}
+function cur(t){const T=S.teams[t];return T.pl[T.i]}
+function tgt(){return S.set==3?15:25}
+function point(t){
+ if(S.phase!='play')return;snap();
+ S.sc[t]++;let msg=`${S.teams[t].name} win the rally → ${S.sc[0]}–${S.sc[1]}`;
+ if(t!=S.srv){const L=S.teams[S.srv];L.i=(L.i+1)%L.pl.length;S.srv=t;msg+=` (side-out — ${cur(t)} serves)`}
+ S.log.push(msg);
+ if(S.set==3&&!S.sw&&Math.max(...S.sc)>=8){S.sw=true;S.log.push('Decider: switch sides now')}
+ const a=S.sc[t],b=S.sc[1-t];
+ if(a>=tgt()&&a-b>=2){S.sets[t]++;S.res.push([...S.sc]);S.log.push(`${S.teams[t].name} win Set ${S.set} ${S.sc[0]}–${S.sc[1]}`);S.phase=S.sets[t]==2?'done':'between';if(S.phase=='done')record()}
+ save();render();
+}
+function undo(){if(!H.length)return;if(S.mid){rmMatch(S.mid);saveHist()}S=JSON.parse(H.pop());save();render()}
+function nextSet(f){snap();S.set++;S.sc=[0,0];S.srv=f;S.first.push(f);S.sw=false;S.phase='play';S.log.push(`Set ${S.set} begins — ${S.teams[f].name} serve first (${cur(f)})`);save();render()}
+function setServer(t,k){if(S.teams[t].i==k)return;snap();S.teams[t].i=k;S.log.push(`Server for ${S.teams[t].name} set to ${S.teams[t].pl[k]}`);save();render()}
+function move(t,k,d){const T=S.teams[t],j=k+d;if(j<0||j>=T.pl.length)return;snap();[T.pl[k],T.pl[j]]=[T.pl[j],T.pl[k]];if(T.i==k)T.i=j;else if(T.i==j)T.i=k;S.log.push(`${T.name}: moved ${T.pl[j]} ${d<0?'up':'down'} in serving order`);save();render()}
+function addPlayer(t){const T=S.teams[t],v=$('add'+t).value.trim();if(!v)return;snap();T.pl.push(v);S.log.push(`${T.name}: added ${v} to serving order`);save();render();$('add'+t).focus()}
+let subT=null,drag=null;
+function dragStart(e,t,k){e.preventDefault();drag={t,k,over:k};try{e.target.setPointerCapture(e.pointerId)}catch(x){}}
+document.addEventListener('pointermove',e=>{if(!drag)return;const el=document.elementFromPoint(e.clientX,e.clientY),r=el&&el.closest('.pl');document.querySelectorAll('.pl.ov').forEach(x=>x.classList.remove('ov'));if(r&&r.dataset.t==drag.t){drag.over=+r.dataset.k;r.classList.add('ov')}});
+function dragEnd(){if(!drag)return;const d=drag;drag=null;if(d.over!=d.k)reorder(d.t,d.k,d.over);else render()}
+document.addEventListener('pointerup',dragEnd);document.addEventListener('pointercancel',dragEnd);
+function reorder(t,from,to){const T=S.teams[t];snap();const n=T.pl[from];T.pl.splice(from,1);T.pl.splice(to,0,n);
+ if(T.i==from)T.i=to;else if(from<T.i&&to>=T.i)T.i--;else if(from>T.i&&to<=T.i)T.i++;
+ S.log.push(`${T.name}: moved ${n} to position ${to+1} in serving order`);save();render()}
+function subUI(t){subT=t;render()}
+function subForm(t){const T=S.teams[t];return `<div class="card" style="margin:8px 0;padding:8px"><div class="mut">Player going out</div><select id="so">${T.pl.map((n,k)=>`<option value="${k}" ${k==T.i?'selected':''}>${esc(n)}</option>`).join('')}</select><div class="mut">Player coming in</div><input id="si" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();doSub(${t})}" list="bl${t}" placeholder="New or bench player"><datalist id="bl${t}">${(T.bench||[]).map(b=>`<option value="${esc(b)}">`).join('')}</datalist><div class="row"><button class="pri" onclick="doSub(${t})">Confirm</button><button onclick="subT=null;render()">Cancel</button></div></div>`}
+function doSub(t){const T=S.teams[t],k=+$('so').value,nn=$('si').value.trim();if(!nn)return;if(T.pl.some(p=>p.toLowerCase()==nn.toLowerCase())){alert(nn+' is already in the serving order.');return}
+ snap();const out=T.pl[k];T.pl[k]=nn;T.bench=(T.bench||[]).filter(x=>x.toLowerCase()!=nn.toLowerCase());T.bench.push(out);
+ S.log.push(`Substitution (${T.name}): ${out} out, ${nn} in at ${S.sc[0]}–${S.sc[1]}`);subT=null;save();render()}
+function walkover(t){if(!confirm(S.teams[t].name+' receive the walkover (3 points)?'))return;snap();S.wo=t;S.phase='done';record();S.log.push(`Walkover awarded to ${S.teams[t].name}`);save();render()}
+function reset(){if(confirm(S&&S.mid?'Delete this match? It will also be removed from your history.':'Delete this match? It won’t be saved to your history.')){if(S&&S.mid){rmMatch(S.mid);saveHist()}S=null;H=[];view='home';save();render()}}
+function pts(){
+ if(S.wo!=null)return S.wo==0?[3,0]:[0,3];
+ const w=S.sets[0]==2?0:1,l=1-w,r=[0,0];r[w]=S.sets[l]==0?3:2;return r;
+}
+function side(t){
+ const T=S.teams[t],on=S.srv==t&&S.phase=='play',nx=(T.i+1)%T.pl.length;
+ return `<div class="card"><div class="nm" style="color:var(--${t?'b':'a'})">${esc(T.name)}</div>
+ <div class="srvbox ${on?'':'idle'}">${on?'🏐 '+esc(cur(t))+' serving':'Next to serve: '+esc(T.pl[nx==T.i?T.i:(S.srv==t?nx:T.i)])}</div>
+ <div class="mut" style="margin-bottom:4px">Serving order — drag ≡ to reorder, tap a name to change the server</div>
+ <div class="ord">${T.pl.map((n,k)=>`<div class="pl ${k==T.i?'cur':''}" data-t="${t}" data-k="${k}" onclick="setServer(${t},${k})"><span><span class="hd" title="Drag to reorder" onpointerdown="dragStart(event,${t},${k})" onclick="event.stopPropagation()">≡</span> ${k+1}. ${esc(n)}</span><span>${S.phase=='between'?`<button style="padding:1px 9px" onclick="event.stopPropagation();move(${t},${k},-1)">↑</button> <button style="padding:1px 9px" onclick="event.stopPropagation();move(${t},${k},1)">↓</button>`:(k==T.i?(on?'serving':'up next'):'<span class="mut">set as server</span>')}</span></div>`).join('')}</div>${S.phase=='between'?`<div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="add${t}" enterkeyhint="next" onkeydown="if(event.key==='Enter'){event.preventDefault();addPlayer(${t})}" placeholder="Add player" style="margin:0"><button onclick="addPlayer(${t})">Add</button></div>`:''}${subT==t?subForm(t):`<div class="row" style="margin-top:8px"><button onclick="subUI(${t})">🔄 Substitution</button></div>`}${(T.bench||[]).length?`<div class="mut" style="margin-top:6px">Bench: ${T.bench.map(esc).join(', ')}</div>`:''}</div>`;
+}
+function render(){
+ if(view=='home'){home();return}if(view=='teams'){teamsView();return}if(!S){setup();return}
+ const [A,B]=S.teams,ph=S.phase;
+ let h=`<div class="card">${ph=='play'?`<div class="srvbox" style="margin-top:0">🏐 ${esc(cur(S.srv))} serving <span class="mut">· ${esc(S.teams[S.srv].name)}</span></div>`:''}<div class="sb"><div><div class="nm" style="color:var(--a)">${esc(A.name)}${S.srv==0&&ph=='play'?'<span class="sv">serve</span>':''}</div><div class="sc">${S.sc[0]}</div><div class="mut">Sets ${S.sets[0]}</div></div>
+ <div class="mut">Set ${S.set}<br>to ${tgt()}<br>win by 2</div>
+ <div><div class="nm" style="color:var(--b)">${esc(B.name)}${S.srv==1&&ph=='play'?'<span class="sv">serve</span>':''}</div><div class="sc">${S.sc[1]}</div><div class="mut">Sets ${S.sets[1]}</div></div></div>
+ ${S.res.length?`<div class="mut" style="text-align:center;margin-top:6px">Completed: ${S.res.map((r,i)=>`S${i+1} ${r[0]}–${r[1]}`).join(' · ')}</div>`:''}</div>`;
+ if(S.sw&&ph=='play')h+=`<div class="warn">🔁 Decider: teams switch sides at 8 points.</div>`;
+ if(ph=='play'&&S.sc[0]>=tgt()-1&&S.sc[1]>=tgt()-1)h+=`<div class="warn">Late-set tie — play continues, no cap, until a 2-point lead.</div>`;
+ if(ph=='play')h+=`<div class="row"><button class="big ta" onclick="point(0)">+ Point ${esc(A.name)}</button><button class="big tb" onclick="point(1)">+ Point ${esc(B.name)}</button></div>
+ <div class="row" style="margin:10px 0"><button onclick="undo()">↩ Undo</button><button onclick="walkover(0)">Walkover → ${esc(A.name)}</button><button onclick="walkover(1)">Walkover → ${esc(B.name)}</button></div>`;
+ if(ph=='between'){const d=S.set==1?1-S.first[0]:null;
+  h+=`<div class="card"><b>Set ${S.set} finished.</b> Who serves first in Set ${S.set+1}?<div class="mut">${S.set==1?'Standard: the team that received first in Set 1 serves first in Set 2.':'Decider — hold a new coin toss.'} Edit the serving order below: reorder with ↑ ↓ or add players (names can’t be removed). Tap a name to choose who serves first.</div>
+  <div class="row" style="margin-top:8px"><button class="${d==0?'pri':''}" onclick="nextSet(0)">${esc(A.name)} serve</button><button class="${d==1?'pri':''}" onclick="nextSet(1)">${esc(B.name)} serve</button><button onclick="undo()">↩ Undo last point</button></div></div>`}
+ if(ph=='done'){const p=pts(),w=p[0]>p[1]?0:1;
+  h+=`<div class="card"><div class="ok">🏆 ${esc(S.teams[w].name)} win${S.wo!=null?' by walkover':` ${S.sets[w]}–${S.sets[1-w]}`}</div>
+  <p>League points: <b>${esc(A.name)} ${p[0]}</b> · <b>${esc(B.name)} ${p[1]}</b></p>
+  <div class="row"><button onclick="undo()">↩ Undo</button><button class="pri" onclick="newMatch(true)">New match</button><button onclick="goHome()">← Home</button></div></div>`}
+ h+=`<div class="g2">${side(0)}${side(1)}</div>
+ <div class="card"><b>Match log</b><ul>${S.log.slice(-10).reverse().map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>
+ <div class="row"><button onclick="goHome()">← Home</button><button onclick="reset()">🗑 Delete match</button></div>
+ <p class="mut">Points table: 2–0 win = 3 · 2–1 win = 2 · loss = 0 · walkover = 3.</p>`;
+ $('app').innerHTML=h;
+}
+let FB=null;
+function saveHist(){persist();if(!FB||!LC)return;setSync('☁ Syncing…');FB.merge(LC,{matches:HIST,teams:TEAMS,del:DEL,tu:TU}).then(()=>setSync('☁ Synced · league '+LC.toUpperCase())).catch(()=>setSync('⚠ Sync failed — saved on this device'))}
+async function connect(){if(unsub){try{unsub()}catch(e){}unsub=null}if(!FB||!LC)return;saveHist();unsub=FB.listen(LC,mergeRemote)}
+async function setLeague(c){LC=c;try{localStorage.setItem('vb-league-v1',c)}catch(e){}await connect();render()}
+async function initCloud(){FB=await window.fbReady;if(!FB){setSync('Local only — add your Firebase config to enable sync (see README)');return}
+ if(!LC){setSync('Local only — start or join a league below to sync');return}await connect()}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+render();initCloud();
+</script></body></html>
